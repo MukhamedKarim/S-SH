@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Соловея — Штрассена</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f8f9fa; }
+        h2 { color: #333; }
+        .container { max-width: 800px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        label, input, button { display: block; width: 100%; margin-bottom: 10px; }
+        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #007bff; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .output-container { display: flex; flex-wrap: wrap; gap: 10px; }
+        .output-box { flex: 1 1 calc(50% - 10px); background: #e9ecef; padding: 15px; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; font-size: 14px; line-height: 1.6; }
+        @media (max-width: 600px) { .output-box { flex: 1 1 100%; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Тест Соловея — Штрассена</h2>
+        <label for="n">Введите число n: </label>
+        <input type="number" id="n" value="91">
+        <button onclick="runTest()">Проверить</button>
+        <div class="output-container" id="output"></div>
+    </div>
+
+    <script>
+        // НОД 
+        function gcd(a, b) {
+            while (b !== 0) {
+                [a, b] = [b, a % b];
+            }
+            return a;
+        }
+
+        // Функция быстрого возведения в степень по модулю
+        function modExp(base, exp, mod) {
+            let result = 1, steps = [];
+            while (exp > 0) {
+                steps.push(`${base}^${exp} mod ${mod} (возведение в степень)`);
+                if (exp % 2 === 1) {
+                    result = (result * base) % mod;
+                    steps.push(`Умножаем ${result} на ${base} и берем по модулю ${mod}`);
+                }
+                exp = Math.floor(exp / 2);
+                base = (base * base) % mod;
+                steps.push(`Квадрат основания: ${base} mod ${mod}`);
+            }
+            return { result, steps };
+        }
+
+        // Функция для вычисления символа Якоби
+        function jacobiSymbol(a, n) {
+            if (gcd(a, n) !== 1) return 0; // Если числа не взаимно просты, возвращаем 0
+            let result = 1, steps = [];
+            while (a !== 0) {
+                while (a % 2 === 0) {
+                    steps.push(`${a} -> ${a}/2 (делим на 2)`);
+                    a /= 2;
+                    if (n % 8 === 3 || n % 8 === 5) {
+                        result = -result;
+                        steps.push(`Так как ${n} mod 8 = ${n % 8}, меняем знак`);
+                    }
+                }
+                steps.push(`(${a}, ${n}) переставляем (перестановка)`);
+                [a, n] = [n, a];
+                if (a % 4 === 3 && n % 4 === 3) {
+                    result = -result;
+                    steps.push(`Оба числа mod 4 = 3, меняем знак`);
+                }
+                a %= n;
+                steps.push(`Остаток от деления: ${a}`);
+            }
+            return { result: n === 1 ? result : 0, steps };
+        }
+
+        // Функция для получения случайных простых чисел, подходящих под тест
+        function getRandomPrimes(n, count) {
+            let primes = [];
+            for (let i = 2; i < n; i++) {
+                if (gcd(i, n) === 1) primes.push(i);
+            }
+            primes.sort(() => Math.random() - 0.5);
+            return primes.slice(0, count);
+        }
+
+        // Основная функция теста Соловея — Штрассена
+        function solovayStrassen(n) {
+            if (n < 2) return false;
+            if (n === 2 || n === 3) return true;
+            if (n % 2 === 0) return false;
+            
+            let outputContainer = document.getElementById("output");
+            outputContainer.innerHTML = "";
+            let aValues = getRandomPrimes(n, 5);
+            
+            for (let a of aValues) {
+                let jacobi = jacobiSymbol(a, n);
+                let expMod = modExp(a, (n - 1) / 2, n);
+                let resultHTML = `<div class='output-box'>`;
+                resultHTML += `<strong>Тест с a = ${a}:</strong><br><br>`;
+                resultHTML += `J(${a}/${n}) = ${jacobi.result}<br><br>`;
+                resultHTML += `<strong>Шаги вычисления символа Якоби:</strong><br><br> ${jacobi.steps.join('<br><br>')}<br><br>`;
+                resultHTML += `<strong>Возведение в степень по модулю:</strong><br><br> ${expMod.steps.join('<br><br>')}<br><br>`;
+                resultHTML += `(${a}^(${(n - 1) / 2}) mod ${n}) = ${expMod.result}<br><br>`;
+                resultHTML += (expMod.result === jacobi.result % n) 
+                    ? `✅ Соответствует, продолжаем проверку.` 
+                    : `❌ Ошибка, ${n} составное число.`;
+                resultHTML += `</div>`;
+                outputContainer.innerHTML += resultHTML;
+            }
+        }
+
+        // Функция запуска теста по нажатию кнопки
+        function runTest() {
+            let n = parseInt(document.getElementById("n").value);
+            solovayStrassen(n);
+        }
+    </script>
+</body>
+</html>
