@@ -1,2 +1,2 @@
 # S-SH
-![Image](https://github.com/user-attachments/assets/8bc406eb-5102-4e8b-851a-a33c845e848f)
+![Image](https://github.com/user-attachments/assets/32a5757e-ade4-48e7-83f4-bfc781871bc1)
